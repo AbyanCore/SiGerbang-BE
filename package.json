@@ -1,10 +1,10 @@
 {
   "name": "sigerbang-js",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "src/main.ts",
   "scripts": {
     "start": "npx ts-node src/main.ts",
-    "dev": "npx nodemon src/main.ts"
+    "dev": "npx nodemon -r dotenv/config src/main.ts dotenv_config_path=.env.local"
   },
   "repository": {
     "type": "git",

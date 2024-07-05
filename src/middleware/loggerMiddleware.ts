@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from "express";
+import betterlog from "../utils/betterlog";
 
 const loggerMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  console.log(
-    `[${new Date().toISOString()}] ${req.ip} ${req.method} ${req.url}`
-  );
+  betterlog("Log", `${req.ip} ${req.method} ${req.url}`);
   next();
 };
 

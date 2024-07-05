@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { db } from "../database/db";
 import ResponseMessage from "../model/ResponeMessage";
+import Secure from "../utils/secureUtils";
 
 class userController {
   async get_users(_req: Request, res: Response) {
@@ -37,7 +38,12 @@ class userController {
   async post_user(req: Request, res: Response) {
     const body = req.body;
 
-    const data = await db.user.create({ data: body });
+    const data = await db.user.create({
+      data: {
+        password: Secure.hashPassword(body.password),
+        ...body,
+      },
+    });
     const result: ResponseMessage = {
       data: data,
       message: "Success",
@@ -67,7 +73,10 @@ class userController {
     result = {
       data: await db.user.update({
         where: { id: parseInt(id) },
-        data: body,
+        data: {
+          password: Secure.hashPassword(body.password),
+          ...body,
+        },
       }),
       message: "Success",
       status: 200,
