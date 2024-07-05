@@ -1,0 +1,33 @@
+{
+  "name": "sigerbang-js",
+  "version": "1.0.0",
+  "main": "src/main.ts",
+  "scripts": {
+    "start": "npx ts-node src/main.ts",
+    "dev": "npx nodemon src/main.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AbyanCore/SiGerbang.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AbyanCore/SiGerbang/issues"
+  },
+  "homepage": "https://github.com/AbyanCore/SiGerbang#readme",
+  "description": "",
+  "dependencies": {
+    "@prisma/client": "^5.16.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/ws": "^8.5.10",
+    "prisma": "^5.16.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  }
+}
