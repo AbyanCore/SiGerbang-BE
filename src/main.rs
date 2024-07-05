@@ -14,7 +14,7 @@ mod routes;
 mod websocket;
 
 use database::db_utils::{ get_pool, AppState, DbActor };
-use routes::{ system_route::system_routes, user_route::user_routes };
+use routes::{ grub_route::grub_routes, system_route::system_routes, user_route::user_routes };
 
 #[actix_web::main]
 pub async fn main() -> std::io::Result<()> {
@@ -31,6 +31,7 @@ pub async fn main() -> std::io::Result<()> {
             .app_data(Data::new(AppState { db: db_addr.clone() }))
             .configure(user_routes)
             .configure(system_routes)
+            .configure(grub_routes)
     })
         .bind(("localhost", 8080))?
         .run().await
