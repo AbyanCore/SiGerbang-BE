@@ -3,7 +3,7 @@ import Secure from "../utils/secureUtils";
 import betterlog from "../utils/betterlog";
 
 const secureMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const token = req.headers.authorization;
+  const token = Secure.extractToken(req)!;
 
   // finding token
   if (!token) {

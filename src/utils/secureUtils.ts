@@ -1,12 +1,14 @@
 import crypto from "crypto";
+import storeDataModel from "../model/storeDataModel";
+import { Request } from "express";
 
 class Secure {
-  static _tokens: Map<string, Date> | undefined = undefined;
-  static expire_time = 1000 * 60;
+  static _tokens: Map<string, storeDataModel> | undefined = undefined;
+  static expire_time = 1000 * 60 * 5;
 
-  static tokens(): Map<string, Date> {
+  static tokens(): Map<string, storeDataModel> {
     if (this._tokens === undefined) {
-      this._tokens = new Map<string, Date>();
+      this._tokens = new Map<string, storeDataModel>();
     }
 
     return this._tokens;
@@ -32,17 +34,17 @@ class Secure {
     return decrypted;
   }
 
-  static generateToken(): string {
+  static generateToken(user_id: number): string {
     this.cleanupTokens();
     const token = crypto.randomBytes(32).toString("hex");
-    this.tokens().set(token, new Date());
+    this.tokens().set(token, { create_at: new Date(), user_id });
     return token;
   }
 
   private static cleanupTokens() {
     for (const [key, value] of this.tokens()) {
       const now = new Date();
-      const diff = now.getTime() - value.getTime();
+      const diff = now.getTime() - value.create_at.getTime();
       if (diff > Secure.expire_time) {
         this.tokens().delete(key);
       }
@@ -54,7 +56,7 @@ class Secure {
       const date = this.tokens().get(token);
       if (date) {
         const now = new Date();
-        const diff = now.getTime() - date.getTime();
+        const diff = now.getTime() - date.create_at.getTime();
         if (diff < Secure.expire_time) {
           return true;
         } else {
@@ -64,6 +66,22 @@ class Secure {
     }
 
     return false;
+  }
+
+  static extractToken(req: Request): string | null {
+    const token = req.headers.authorization || req.cookies?.token || null;
+    return token;
+  }
+
+  static getUserID(token: string): number | undefined {
+    if (this.tokens().has(token)) {
+      const date = this.tokens().get(token);
+      if (date) {
+        return date.user_id;
+      }
+    }
+
+    return undefined;
   }
 }
 

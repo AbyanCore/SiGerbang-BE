@@ -1,11 +1,13 @@
-import { db } from "../database/db";
 import { Response, Request } from "express";
 import ResponseMessage from "../model/ResponeMessage";
-import { randomUUID } from "crypto";
+import grubService from "../service/grubService";
+import Secure from "../utils/secureUtils";
+import usergrubService from "../service/usergrubService";
+import userService from "../service/userService";
 
 class grubController {
   async get_grubs(req: Request, res: Response) {
-    const data = await db.grub.findMany();
+    const data = await grubService.getGrubs();
     const result: ResponseMessage = {
       data: data,
       message: "Success",
@@ -16,7 +18,7 @@ class grubController {
   }
 
   async get_grub(req: Request, res: Response) {
-    const id = req.params.id;
+    const uuid = req.params.uuid;
 
     let result: ResponseMessage = {
       message: "Data not found",
@@ -24,7 +26,7 @@ class grubController {
       status: 404,
     };
 
-    const data = await db.grub.findFirst({ where: { uuid: id } });
+    const data = await grubService.getGrubByUuid(uuid);
     if (data)
       result = {
         data: data,
@@ -36,25 +38,38 @@ class grubController {
   }
 
   async post_grub(req: Request, res: Response) {
-    const body = req.body;
+    const body = {
+      author: (await userService.getUserByToken(Secure.extractToken(req)!))?.id,
+      ...req.body,
+    };
+    let result: ResponseMessage = {
+      message: "Error",
+      data: null,
+      status: 400,
+    };
 
-    const data = await db.grub.create({
-      data: {
-        uuid: randomUUID(),
-        ...body,
-      },
-    });
-    const result: ResponseMessage = {
+    // execute
+    const data = await grubService.createGrub(body);
+    result = {
       data: { data },
       message: "Success",
       status: 201,
     };
 
+    // past execution
+    if (data != null)
+      await usergrubService.addUserToGrub(
+        data.uuid,
+        (
+          await userService.getUserByToken(Secure.extractToken(req)!)
+        )?.id!
+      );
+
     res.status(result.status).json(result).send();
   }
 
   async put_grub(req: Request, res: Response) {
-    const id = req.params.id;
+    const uuid = req.params.uuid;
     const body = req.body;
 
     let result: ResponseMessage = {
@@ -64,16 +79,24 @@ class grubController {
     };
 
     // validate
-    if ((await db.grub.findFirst({ where: { uuid: id } })) == null) {
+    // check if grub exist
+    if (!(await grubService.isGrubExist(uuid))) {
       res.status(result.status).json(result).send();
       return;
     }
+    // check if user is owner of grub
+    if (
+      !(await grubService.isOwnerGrubByToken(Secure.extractToken(req)!, uuid))
+    ) {
+      result.message = "You are not the owner of this grub";
+      result.status = 401;
+      res.status(result.status).json(result).send();
+      return;
+    }
+
     // execute
     result = {
-      data: await db.grub.update({
-        where: { uuid: id },
-        data: body,
-      }),
+      data: await grubService.updateGrub(uuid, body),
       message: "Success",
       status: 200,
     };
@@ -82,7 +105,7 @@ class grubController {
   }
 
   async delete_grub(req: Request, res: Response) {
-    const id = req.params.id;
+    const uuid = req.params.uuid;
 
     let result: ResponseMessage = {
       message: "Data not found",
@@ -91,14 +114,25 @@ class grubController {
     };
 
     // validate
-    if ((await db.grub.findFirst({ where: { uuid: id } })) == null) {
+    // check if grub exist
+    if ((await grubService.isGrubExist(uuid)) == null) {
+      res.status(result.status).json(result).send();
+      return;
+    }
+    // check if user is owner of grub
+    if (
+      (await grubService.isOwnerGrubByToken(Secure.extractToken(req)!, uuid)) ==
+      null
+    ) {
+      result.message = "You are not the owner of this grub";
+      result.status = 401;
       res.status(result.status).json(result).send();
       return;
     }
 
     // execute
     result = {
-      data: await db.grub.delete({ where: { uuid: id } }),
+      data: await grubService.deleteGrub(uuid),
       message: "Success",
       status: 200,
     };

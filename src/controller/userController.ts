@@ -1,11 +1,10 @@
 import { Request, Response } from "express";
-import { db } from "../database/db";
 import ResponseMessage from "../model/ResponeMessage";
-import Secure from "../utils/secureUtils";
+import userService from "../service/userService";
 
 class userController {
   async get_users(_req: Request, res: Response) {
-    const data = await db.user.findMany();
+    const data = await userService.getUsers();
     const result: ResponseMessage = {
       data: data,
       message: "Success",
@@ -16,7 +15,7 @@ class userController {
   }
 
   async get_user(req: Request, res: Response) {
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
 
     let result: ResponseMessage = {
       message: "Data not found",
@@ -24,7 +23,7 @@ class userController {
       status: 404,
     };
 
-    const data = await db.user.findFirst({ where: { id: parseInt(id) } });
+    const data = await userService.getUserById(id);
     if (data)
       result = {
         data: data,
@@ -38,12 +37,7 @@ class userController {
   async post_user(req: Request, res: Response) {
     const body = req.body;
 
-    const data = await db.user.create({
-      data: {
-        password: Secure.hashPassword(body.password),
-        ...body,
-      },
-    });
+    const data = await userService.createUser(body);
     const result: ResponseMessage = {
       data: data,
       message: "Success",
@@ -54,7 +48,7 @@ class userController {
   }
 
   async put_user(req: Request, res: Response) {
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
     const body = req.body;
 
     let result: ResponseMessage = {
@@ -64,20 +58,14 @@ class userController {
     };
 
     // validate
-    if ((await db.user.findFirst({ where: { id: parseInt(id) } })) == null) {
+    if (await userService.isUserExist(id)) {
       res.status(result.status).json(result).send();
       return;
     }
 
     // execute
     result = {
-      data: await db.user.update({
-        where: { id: parseInt(id) },
-        data: {
-          password: Secure.hashPassword(body.password),
-          ...body,
-        },
-      }),
+      data: await userService.updateUser(id, body),
       message: "Success",
       status: 200,
     };
@@ -86,7 +74,7 @@ class userController {
   }
 
   async delete_user(req: Request, res: Response) {
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
 
     let result: ResponseMessage = {
       message: "Data not found",
@@ -95,14 +83,14 @@ class userController {
     };
 
     // validate
-    if ((await db.user.findFirst({ where: { id: parseInt(id) } })) == null) {
+    if (await userService.getUserById(id)) {
       res.status(result.status).json(result).send();
       return;
     }
 
     // execute
     result = {
-      data: await db.user.delete({ where: { id: parseInt(id) } }),
+      data: await userService.deleteUser(id),
       message: "Success",
       status: 200,
     };

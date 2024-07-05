@@ -1,12 +1,11 @@
 import { db } from "../database/db";
 import { Response, Request } from "express";
 import ResponseMessage from "../model/ResponeMessage";
-import authModel from "../model/authModel";
 import Secure from "../utils/secureUtils";
 
 class authController {
   async signin(req: Request, res: Response) {
-    const body: authModel = req.body;
+    const body = req.body;
     let result: ResponseMessage = {
       data: null,
       message: "Invalid Username or Password",
@@ -21,7 +20,7 @@ class authController {
       result = {
         data: {
           user_data: data,
-          token: Secure.generateToken(),
+          token: Secure.generateToken(data.id),
         },
         message: "Signin Success",
         status: 200,
@@ -49,7 +48,7 @@ class authController {
           username: data.username,
           password: Secure.hashPassword(data.password),
         },
-        token: Secure.generateToken(),
+        token: Secure.generateToken(data.id),
       },
       message: "Success",
       status: 201,
