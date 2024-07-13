@@ -112,26 +112,9 @@ class usergrubController {
     };
 
     // validate
-    // check im owner of grub
-    if (
-      !(await grubService.isOwnerGrubByToken(
-        grub_uuid,
-        Secure.extractToken(req)!
-      ))
-    ) {
-      result.message = "You are not the owner of this grub";
-      result.status = 401;
-      res.status(result.status).json(result).send();
-      return;
-    }
-    // check if user and grub exist
+    // check if user exist
     if (!(await userService.isUserExist(user_id!))) {
       result.message = "User not found";
-      res.status(result.status).json(result).send();
-      return false;
-    }
-    if (!(await grubService.isGrubExist(grub_uuid!))) {
-      result.message = "Grub not found";
       res.status(result.status).json(result).send();
       return false;
     }
@@ -167,26 +150,9 @@ class usergrubController {
     };
 
     // validate
-    // check im owner of grub
-    if (
-      !(await grubService.isOwnerGrubByToken(
-        grub_uuid,
-        Secure.extractToken(req)!
-      ))
-    ) {
-      result.message = "You are not the owner of this grub";
-      result.status = 401;
-      res.status(result.status).json(result).send();
-      return;
-    }
-    // check if user and grub exist
+    // check if user exist
     if (!(await userService.isUserExist(user_id!))) {
       result.message = "User not found";
-      res.status(result.status).json(result).send();
-      return false;
-    }
-    if (!(await grubService.isGrubExist(grub_uuid!))) {
-      result.message = "Grub not found";
       res.status(result.status).json(result).send();
       return false;
     }
@@ -223,26 +189,9 @@ class usergrubController {
     };
 
     // validate
-    // check im owner of grub
-    if (
-      !(await grubService.isOwnerGrubByToken(
-        grub_uuid,
-        Secure.extractToken(req)!
-      ))
-    ) {
-      result.message = "You are not the owner of this grub";
-      result.status = 401;
-      res.status(result.status).json(result).send();
-      return;
-    }
-    // check if user and grub exist
+    // check if user exist
     if (!(await userService.isUserExist(user_id!))) {
       result.message = "User not found";
-      res.status(result.status).json(result).send();
-      return false;
-    }
-    if (!(await grubService.isGrubExist(grub_uuid!))) {
-      result.message = "Grub not found";
       res.status(result.status).json(result).send();
       return false;
     }

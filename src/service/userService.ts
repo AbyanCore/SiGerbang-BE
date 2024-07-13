@@ -6,6 +6,10 @@ class userService {
     return (await this.getUserById(id)) != null;
   }
 
+  static async isUserExistByEmail(email: string) {
+    return (await db.user.findFirst({ where: { email } })) != null;
+  }
+
   static async getUsers() {
     return await db.user.findMany();
   }

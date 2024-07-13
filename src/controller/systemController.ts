@@ -22,8 +22,11 @@ class systemController {
     res.json(message).send();
   }
 
-  get_random(_req: Request, res: Response) {
-    const data = Math.floor(Math.random() * 100);
+  get_random(req: Request, res: Response) {
+    const min = req.query.min ? parseInt(req.query.min as string) : 0;
+    const max = req.query.max ? parseInt(req.query.max as string) : 100;
+
+    const data = Math.floor(Math.random() * (max - min + 1) + min);
     const message: ResponseMessage = {
       data: data,
       message: "Success",

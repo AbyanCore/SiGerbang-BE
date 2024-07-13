@@ -7,13 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model diesel_schema_migrations {
-  version String   @id @db.VarChar(50)
-  run_on  DateTime @default(now()) @db.Timestamp(6)
-
-  @@map("__diesel_schema_migrations")
-}
-
 model grub {
   uuid        String      @id @db.VarChar(50)
   name        String      @db.VarChar(255)
@@ -47,6 +40,7 @@ model user {
 }
 
 enum user_role {
+  owner
   admin
   member
 }

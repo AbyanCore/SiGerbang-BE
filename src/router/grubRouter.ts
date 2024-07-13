@@ -5,7 +5,7 @@ import secureMiddleware from "../middleware/secureMiddleware";
 const grubRouter = Router();
 const controller = new grubController();
 
-grubRouter.use(secureMiddleware);
+grubRouter.use(secureMiddleware.checkToken);
 grubRouter
   .get("/", controller.get_grubs)
   .get("/:uuid", controller.get_grub)
