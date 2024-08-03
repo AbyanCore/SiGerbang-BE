@@ -13,12 +13,23 @@ import usergrubRouter from "./router/usergrubRouter";
 import coreWebsocket from "./websocket/coreWebsocket";
 import publicWebsocket from "./websocket/publicWebscoket";
 import globalErrorMiddleware from "./middleware/globalErrorMiddleware";
+import privateWebsocket from "./websocket/privateWebsocket";
+import cookieParser from "cookie-parser";
+import cors from "cors";
 
 const app = express();
 const server = http.createServer(app);
 const port = 3000;
 
 app.use(express.json());
+app.use(cookieParser());
+app.use(
+  cors({
+    credentials: true,
+    origin: ["http://localhost:3000", "http://localhost:3001"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // app.use(limiterMiddleware);
 app.use(loggerMiddleware);
@@ -34,7 +45,8 @@ app.use(globalErrorMiddleware);
 
 // ws
 const wss = new coreWebsocket(server);
-wss.addWebsocket("/public", new publicWebsocket(server));
+wss.addWebsocket("/ws/public", new publicWebsocket(server));
+wss.addWebsocket("/ws/private", new privateWebsocket(server));
 
 // Start server
 server.listen(port, () => {

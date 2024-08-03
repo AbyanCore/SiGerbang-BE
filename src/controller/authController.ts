@@ -41,6 +41,7 @@ class authController {
       };
 
       res.cookie("token", result.data.token, {
+        httpOnly: true,
         maxAge: 1000,
       });
     }
@@ -83,7 +84,7 @@ class authController {
     };
 
     res.cookie("token", result.data.token, {
-      maxAge: 1000,
+      maxAge: 1000 * 60 * 5,
     });
 
     res.status(result.status).json(result).send();
