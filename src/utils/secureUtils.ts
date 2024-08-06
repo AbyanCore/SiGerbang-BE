@@ -1,14 +1,14 @@
 import crypto from "crypto";
-import storeDataModel from "../model/storeDataModel";
+import jwtDataModel from "../model/storeDataModel";
 import { Request } from "express";
 
 class Secure {
-  static _tokens: Map<string, storeDataModel> | undefined = undefined;
+  static _tokens: Array<String> | undefined = undefined;
   static expire_time = 1000 * 60 * 5;
 
-  static tokens(): Map<string, storeDataModel> {
+  static tokens(): Array<String> {
     if (this._tokens === undefined) {
-      this._tokens = new Map<string, storeDataModel>();
+      this._tokens = new Array<String>();
     }
 
     return this._tokens;
@@ -35,37 +35,115 @@ class Secure {
   }
 
   static generateToken(user_id: number): string {
-    this.cleanupTokens();
-    const token = crypto.randomBytes(32).toString("hex");
-    this.tokens().set(token, { create_at: new Date(), user_id });
+    const header = {
+      alg: "HS256", // Algoritma yang digunakan
+      typ: "JWT", // Tipe token
+    };
+
+    const payload = {
+      user_id,
+      iat: Math.floor(Date.now() / 1000), // Issued At (timestamp)
+      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // Expires in 24 hours
+    } as jwtDataModel;
+
+    // Encoding header dan payload menjadi base64url
+    const encodedHeader = btoa(JSON.stringify(header))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, ""); // Hapus padding '='
+
+    const encodedPayload = btoa(JSON.stringify(payload))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+
+    // Membuat signature dengan SHA256
+    const signature = crypto
+      .createHmac("sha256", process.env.SECURE_KEY!)
+      .update(encodedHeader + "." + encodedPayload)
+      .digest("base64");
+
+    // Menggabungkan header, payload, dan signature
+    const token = `${encodedHeader}.${encodedPayload}.${signature}`;
+
     return token;
   }
 
   private static cleanupTokens() {
-    for (const [key, value] of this.tokens()) {
-      const now = new Date();
-      const diff = now.getTime() - value.create_at.getTime();
-      if (diff > Secure.expire_time) {
-        this.tokens().delete(key);
+    const now = Math.floor(Date.now() / 1000);
+    this.tokens().forEach((token, index) => {
+      const payload = token.split(".")[1];
+      const data: jwtDataModel = JSON.parse(atob(payload));
+      if (data.exp < now) {
+        this.tokens().splice(index, 1);
       }
-    }
+    });
   }
 
   static validateToken(token: string): boolean {
-    if (this.tokens().has(token)) {
-      const date = this.tokens().get(token);
-      if (date) {
-        const now = new Date();
-        const diff = now.getTime() - date.create_at.getTime();
-        if (diff < Secure.expire_time) {
-          return true;
-        } else {
-          this.tokens().delete(token);
-        }
-      }
+    const parts = token.split(".");
+    if (parts.length !== 3) {
+      return false;
+    }
+
+    const header = parts[0];
+    const payload = parts[1];
+    const signature = parts[2];
+
+    if (!header || !payload || !signature) {
+      return false;
+    }
+
+    if (header.length === 0 || payload.length === 0 || signature.length === 0) {
+      return false;
     }
 
     return false;
+  }
+
+  static verifyToken(token: string): boolean {
+    if (!this.validateToken(token)) {
+      return false;
+    }
+
+    const payload = token.split(".")[1];
+    const data: jwtDataModel = JSON.parse(atob(payload));
+    if (data.exp < Math.floor(Date.now() / 1000)) {
+      return false;
+    }
+
+    const signature = crypto
+      .createHmac("sha256", process.env.SECURE_KEY!)
+      .update(token.split(".")[0] + "." + payload)
+      .digest("base64");
+
+    if (signature !== token.split(".")[2]) {
+      return false;
+    }
+
+    return true;
+  }
+
+  static revalidateToken(token: string): string {
+    if (!this.verifyToken(token)) {
+      return token;
+    }
+
+    const payload = token.split(".")[1];
+    const data: jwtDataModel = JSON.parse(atob(payload));
+    data.exp = Math.floor(Date.now() / 1000) + 60 * 60 * 24;
+
+    const encodedPayload = btoa(JSON.stringify(data))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+
+    const signature = crypto
+      .createHmac("sha256", process.env.SECURE_KEY!)
+      .update(token.split(".")[0] + "." + encodedPayload)
+      .digest("base64");
+
+    return `${token.split(".")[0]}.${encodedPayload}.${signature}`;
   }
 
   static extractToken(req: Request): string | null {
@@ -74,14 +152,9 @@ class Secure {
   }
 
   static getUserID(token: string): number | undefined {
-    if (this.tokens().has(token)) {
-      const date = this.tokens().get(token);
-      if (date) {
-        return date.user_id;
-      }
-    }
-
-    return undefined;
+    const payload = token.split(".")[1];
+    const data: jwtDataModel = JSON.parse(atob(payload));
+    return data.user_id;
   }
 }
 

@@ -58,7 +58,7 @@ class authController {
       helper.sendErrorResponse(res, "Invalid input", 400);
       return;
     }
-    // check if email already exist
+    // check if email already existg
     if (await userService.isUserExistByEmail(body.email)) {
       helper.sendErrorResponse(res, "Email already exist", 400);
       return;
@@ -84,7 +84,10 @@ class authController {
     };
 
     res.cookie("token", result.data.token, {
-      maxAge: 1000 * 60 * 5,
+      httpOnly: true,
+      maxAge: 3600000,
+      path: "",
+      expires: new Date(Date.now() + 3600000),
     });
 
     res.status(result.status).json(result).send();

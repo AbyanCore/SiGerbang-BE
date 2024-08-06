@@ -1,6 +1,7 @@
-type storeDataModel = {
-  create_at: Date;
+type jwtDataModel = {
   user_id: number;
+  iat: number;
+  exp: number;
 };
 
-export default storeDataModel;
+export default jwtDataModel;

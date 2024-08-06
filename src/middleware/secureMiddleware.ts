@@ -20,7 +20,7 @@ class secureMiddleware {
     }
 
     // validate token
-    if (!Secure.validateToken(token)) {
+    if (!Secure.validateToken(token) && !Secure.verifyToken(token)) {
       betterlog(
         "Auth",
         "Unauthorized access from: " + req.ip + " reason token not valid",
