@@ -7,8 +7,16 @@ const usergrubRouter = Router();
 const controller = new usergrubController();
 
 usergrubRouter.use(secureMiddleware.checkToken);
-usergrubRouter.get("/:uuid", controller.get_usersInGrub);
-usergrubRouter.get("/:uuid", controller.get_userInGrub);
+usergrubRouter.get(
+  "/:uuid",
+  usegrubMiddleware.validateUserInGrub,
+  controller.get_usersInGrub
+);
+usergrubRouter.get(
+  "/:uuid",
+  usegrubMiddleware.validateUserInGrub,
+  controller.get_userInGrub
+);
 
 usergrubRouter.post(
   "/:uuid",
